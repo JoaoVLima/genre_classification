@@ -10,6 +10,25 @@ import librosa as lr
 import datetime
 import json
 import threading
+import time
+
+from tqdm import tqdm_notebook
+import keras
+from keras.layers import Activation, Dense, Conv1D, Conv2D, MaxPooling1D, Flatten, Reshape
+
+from sklearn.utils import shuffle
+from sklearn.preprocessing import MultiLabelBinarizer, LabelEncoder, LabelBinarizer, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC, LinearSVC
+#from sklearn.gaussian_process import GaussianProcessClassifier
+#from sklearn.gaussian_process.kernels import RBF
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.multiclass import OneVsRestClassifier
 
 import utils
 import progress
@@ -181,11 +200,6 @@ data_meio_treino_x = funcao(y=data_meio, sr=sampling_rate)
 
 data_fim_treino_x = funcao(y=data_fim, sr=sampling_rate)
 
-data_inicio_treino_x
-
-tracks['set', 'subset']
-
-
 ## Treinando os modelos
 
 full = tracks['set', 'subset'] <= 'large'
@@ -216,4 +230,44 @@ clf.fit(X_train, y_train)
 score = clf.score(X_test, y_test)
 print('Accuracy: {:.2%}'.format(score))
 
-## Testando o modelo
+
+def test_classifiers_features(classifiers, feature_sets, multi_label=False):
+    columns = list(classifiers.keys()).insert(0, 'dim')
+    scores = pd.DataFrame(columns=columns, index=feature_sets.keys())
+    times = pd.DataFrame(columns=classifiers.keys(), index=feature_sets.keys())
+    for fset_name, fset in tqdm_notebook(feature_sets.items(), desc='features'):
+        y_train, y_val, y_test, X_train, X_val, X_test = pre_process(tracks, features_all, fset, multi_label)
+        scores.loc[fset_name, 'dim'] = X_train.shape[1]
+        for clf_name, clf in classifiers.items():  # tqdm_notebook(classifiers.items(), desc='classifiers', leave=False):
+            t = time.process_time()
+            clf.fit(X_train, y_train)
+            score = clf.score(X_test, y_test)
+            scores.loc[fset_name, clf_name] = score
+            times.loc[fset_name, clf_name] = time.process_time() - t
+    return scores, times
+
+def format_scores(scores):
+    def highlight(s):
+        is_max = s == max(s[1:])
+        return ['background-color: yellow' if v else '' for v in is_max]
+    scores = scores.style.apply(highlight, axis=1)
+    return scores.format('{:.2%}', subset=pd.IndexSlice[:, scores.columns[1]:])
+
+
+classifiers = {
+    #LogisticRegression(),
+    'LR': OneVsRestClassifier(LogisticRegression()),
+    'SVC': OneVsRestClassifier(SVC()),
+    'MLP': MLPClassifier(max_iter=700),
+}
+
+feature_sets = {
+    'mfcc': 'mfcc',
+    'mfcc/contrast/chroma/centroid/tonnetz': ['mfcc', 'spectral_contrast', 'chroma_cens', 'spectral_centroid', 'tonnetz'],
+    'mfcc/contrast/chroma/centroid/zcr': ['mfcc', 'spectral_contrast', 'chroma_cens', 'spectral_centroid', 'zcr'],
+}
+
+scores, times = test_classifiers_features(classifiers, feature_sets, multi_label=True)
+
+ipd.display(format_scores(scores))
+ipd.display(times.style.format('{:.4f}'))

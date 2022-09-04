@@ -1,0 +1,2 @@
+CURRENT_ID = 2
+ERRORS_ID = []
