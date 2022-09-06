@@ -4,25 +4,25 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import sklearn as skl
-import sklearn.utils, sklearn.preprocessing, sklearn.decomposition, sklearn.svm
 import librosa as lr
 import datetime
 import json
 import threading
 import time
+from multiprocessing import Pool
 
-from tqdm import tqdm_notebook
+from tqdm.notebook import tqdm as tqdm_notebook
+
 import keras
 from keras.layers import Activation, Dense, Conv1D, Conv2D, MaxPooling1D, Flatten, Reshape
 
+import sklearn as skl
+import sklearn.utils, sklearn.preprocessing, sklearn.decomposition, sklearn.svm
 from sklearn.utils import shuffle
 from sklearn.preprocessing import MultiLabelBinarizer, LabelEncoder, LabelBinarizer, StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC, LinearSVC
-#from sklearn.gaussian_process import GaussianProcessClassifier
-#from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.neural_network import MLPClassifier
@@ -97,98 +97,112 @@ def runbatch(inicio, fim):
         tr.join()
         print("Finished")
 
+def etl(filename: str) -> tuple[str, float]:
+    # extract
+    start_t = time.perf_counter()
+    samplerate, data = scipy.io.wavfile.read(filename)
 
-def extract_features(data, funcoes):
+    # do some transform
+    eps = .1
+    data += np.random.normal(scale=eps, size=len(data))
+    data = np.clip(data, -1.0, 1.0)
 
-    if type(funcoes)==list:
-        for funcao in funcoes:
-            data_inicio_treino_x = funcao(y=data_inicio, sr=sampling_rate)
-            data_meio_treino_x = funcao(y=data_meio, sr=sampling_rate)
-            data_fim_treino_x = funcao(y=data_fim, sr=sampling_rate)
+    # load (store new form)
+    new_filename = filename.removesuffix(".wav") + "-transformed.wav"
+    scipy.io.wavfile.write(new_filename, samplerate, data)
+    end_t = time.perf_counter()
 
-    else:
-        data_inicio_treino_x = funcoes(y=data_inicio, sr=sampling_rate)
-        data_meio_treino_x = funcoes(y=data_meio, sr=sampling_rate)
-        data_fim_treino_x = funcoes(y=data_fim, sr=sampling_rate)
+    return filename, end_t - start_t
 
+def etl_demo():
+    filenames = [f"sounds/example{n}.wav" for n in range(24)]
+    start_t = time.perf_counter()
 
-data_file = open(FEATURE_DIR + '/data.csv', 'a')
-data_inicio_file = open(FEATURE_DIR + '/data_inicio.csv', 'a')
-data_meio_file = open(FEATURE_DIR + '/data_meio.csv', 'a')
-data_fim_file = open(FEATURE_DIR + '/data_fim.csv', 'a')
-log_file = open(LOG_DIR + '/log.txt', 'a')
+    print("starting etl")
+    with Pool() as pool:
+        results = pool.map(etl, filenames)
 
-# Para cada track da base
-for id in tracks_ids:
-    try:
-        ## Open files
-        progress_file = open(LOG_DIR + '/progress.py', 'w')
+        for filename, duration in results:
+            print(f"{filename} completed in {duration:.2f}s")
 
-        ## Salva as variaveis de progresso
-        progress_file.write(f'CURRENT_ID = {id}\n')
-        progress_file.write(f'ERRORS_ID = {errors_id}\n')
-        progress_file.close()
-
-        # Pega o caminho do arquivo de audio
-        filename = utils.get_audio_path(AUDIO_DIR, id)
-
-        # Carrega os dados do arquivo
-        data, sampling_rate = lr.load(filename, sr=sampling_rate, mono=True)
-
-        # Time decomposition
-        data_inicio, data_meio, data_fim = extrair30s(data, sampling_rate)
-
-        data_file.write(f'{id}')
-        data_inicio_file.write(f'{id}')
-        data_meio_file.write(f'{id}')
-        data_fim_file.write(f'{id}')
-
-        print('Ja tem todos os datas')
-        print('iniciando feature extraction')
-        # Feature Extraction
-        for funcao in funcoes_de_feature_extraction:
-            print(funcao.__name__)
-            data_treino_x = funcao(y=data, sr=sampling_rate)
-            print('data')
-            print(data_treino_x)
-            data_inicio_treino_x = funcao(y=data_inicio, sr=sampling_rate)
-            print('data i')
-            print(data_inicio_treino_x)
-            data_meio_treino_x = funcao(y=data_meio, sr=sampling_rate)
-            print('data m')
-            print(data_meio_treino_x)
-            data_fim_treino_x = funcao(y=data_fim, sr=sampling_rate)
-            print('data f')
-            print(data_fim_treino_x)
-
-            # Adiciona as features nos csv
-            data_file.write(f',"{str(data_treino_x.tolist())}"')
-            data_inicio_file.write(f',"{str(data_inicio_treino_x.tolist())}"')
-            data_meio_file.write(f',"{str(data_meio_treino_x.tolist())}"')
-            data_fim_file.write(f',"{str(data_fim_treino_x.tolist())}"')
-            print('escreveu nos csvs')
-
-        print('acabou')
-        break
-    except Exception as e:
-        errors_id.append(id)
-        log_file.write(f'{datetime.datetime.now()} | ERROR | id={id}, error={e}\n')
-    else:
-        print('deuboa')
-        log_file.write(f'{datetime.datetime.now()} | SUCCESS | id={id}\n')
-    finally:
-
-print('final')
-log_file.write(f'{datetime.datetime.now()} | FINISH | hopefully...\n')
-
-data_file.close()
-data_inicio_file.close()
-data_meio_file.close()
-data_fim_file.close()
-log_file.close()
+    end_t = time.perf_counter()
+    total_duration = end_t - start_t
+    print(f"etl took {total_duration:.2f}s total")
 
 
-progress_file.close()
+utils.FfmpegLoader()
+
+
+def extract_features(data, funcoes:list):
+
+    for funcao in funcoes:
+        data_inicio_treino_x = funcao(y=data_inicio, sr=sampling_rate)
+        data_meio_treino_x = funcao(y=data_meio, sr=sampling_rate)
+        data_fim_treino_x = funcao(y=data_fim, sr=sampling_rate)
+
+
+    data_file = open(FEATURE_DIR + '/data.csv', 'a')
+    data_inicio_file = open(FEATURE_DIR + '/data_inicio.csv', 'a')
+    data_meio_file = open(FEATURE_DIR + '/data_meio.csv', 'a')
+    data_fim_file = open(FEATURE_DIR + '/data_fim.csv', 'a')
+    log_file = open(LOG_DIR + '/log.txt', 'a')
+
+    # Para cada track da base
+    for id in tracks_ids:
+        try:
+            ## Open files
+            progress_file = open(LOG_DIR + '/progress.py', 'w')
+
+            ## Salva as variaveis de progresso
+            progress_file.write(f'CURRENT_ID = {id}\n')
+            progress_file.write(f'ERRORS_ID = {errors_id}\n')
+            progress_file.close()
+
+            # Pega o caminho do arquivo de audio
+            filename = utils.get_audio_path(AUDIO_DIR, id)
+
+            # Carrega os dados do arquivo
+            data, sampling_rate = lr.load(filename, sr=sampling_rate, mono=True)
+
+            # Time decomposition
+            data_inicio, data_meio, data_fim = extrair30s(data, sampling_rate)
+
+            data_file.write(f'{id}')
+            data_inicio_file.write(f'{id}')
+            data_meio_file.write(f'{id}')
+            data_fim_file.write(f'{id}')
+
+            # Feature Extraction
+            for funcao in funcoes_de_feature_extraction:
+                data_treino_x = funcao(y=data, sr=sampling_rate)
+                data_inicio_treino_x = funcao(y=data_inicio, sr=sampling_rate)
+                data_meio_treino_x = funcao(y=data_meio, sr=sampling_rate)
+                data_fim_treino_x = funcao(y=data_fim, sr=sampling_rate)
+
+                # Adiciona as features nos csv
+                data_file.write(f',"{str(data_treino_x.tolist())}"')
+                data_inicio_file.write(f',"{str(data_inicio_treino_x.tolist())}"')
+                data_meio_file.write(f',"{str(data_meio_treino_x.tolist())}"')
+                data_fim_file.write(f',"{str(data_fim_treino_x.tolist())}"')
+
+            break
+        except Exception as e:
+            errors_id.append(id)
+            log_file.write(f'{datetime.datetime.now()} | ERROR | id={id}, error={e}\n')
+        else:
+            log_file.write(f'{datetime.datetime.now()} | SUCCESS | id={id}\n')
+        finally:
+
+    log_file.write(f'{datetime.datetime.now()} | FINISH | hopefully...\n')
+
+    data_file.close()
+    data_inicio_file.close()
+    data_meio_file.close()
+    data_fim_file.close()
+    log_file.close()
+
+
+    progress_file.close()
 
 funcao = lr.feature.mfcc
 
