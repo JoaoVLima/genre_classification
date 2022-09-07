@@ -30,88 +30,62 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.multiclass import OneVsRestClassifier
 
+import feature_extraction
 import utils
 import progress
 
 from variables import *
 from feature_extraction import *
 
-# Carregando metadados.
-tracks = utils.load(METADATA_DIR + '/tracks.csv')
-genres = utils.load(METADATA_DIR + '/genres.csv')
+def main():
+    # Carregando metadados.
+    tracks = utils.load(METADATA_DIR + '/tracks.csv')
+    genres = utils.load(METADATA_DIR + '/genres.csv')
 
-# Tratando a Base de dados FMA
-tracks_sem_genero = tracks[('track', 'genre_top')].isna()
-tracks_com_genero = tracks[('track', 'genre_top')].notna()
-tracks = tracks[tracks_com_genero]
+    # Tratando a Base de dados FMA
+    tracks_sem_genero = tracks[('track', 'genre_top')].isna()
+    tracks_com_genero = tracks[('track', 'genre_top')].notna()
+    tracks = tracks[tracks_com_genero]
 
-# Limitando a base
-tipo_tracks = tracks['set', 'subset'] <= 'small'
-tracks = tracks[tipo_tracks]
+    # Limitando a base
+    tipo_tracks = tracks['set', 'subset'] <= 'small'
+    tracks = tracks[tipo_tracks]
 
-# Feature Extraction
+    # Feature Extraction
+    funcoes_de_feature_extraction = [
+        # lr.feature.chroma_stft,
+        # lr.feature.chroma_cqt,
+        # lr.feature.chroma_cens,
+        # lr.feature.melspectrogram,
+        lr.feature.mfcc,
+        # lr.feature.spectral_centroid,
+        # lr.feature.spectral_bandwidth,
+        # lr.feature.spectral_contrast,
+        # lr.feature.spectral_rolloff,
+        # lr.feature.poly_features,
+        # lr.feature.tonnetz,
+        # lr.feature.tempogram,
+        # lr.feature.fourier_tempogram
+    ]
 
-# NAO EXECUTAR
-data_file = open(FEATURE_DIR + '/data.csv', 'w')
-data_s_file = open(FEATURE_DIR + '/data_s.csv', 'w')
-data_m_file = open(FEATURE_DIR + '/data_m.csv', 'w')
-data_e_file = open(FEATURE_DIR + '/data_e.csv', 'w')
+    current_id = progress.CURRENT_ID
+    errors_id = progress.ERRORS_ID
 
-data_file.write('id')
-data_s_file.write('id')
-data_m_file.write('id')
-data_e_file.write('id')
+    tracks_ids = list(tracks.index)
 
-for funcao in funcoes_de_feature_extraction:
-    data_file.write(f',{funcao.__name__}')
-    data_s_file.write(f',{funcao.__name__}')
-    data_m_file.write(f',{funcao.__name__}')
-    data_e_file.write(f',{funcao.__name__}')
+    tracks_ids = tracks_ids[tracks_ids.index(current_id):]
 
-data_file.write('\n')
-data_s_file.write('\n')
-data_m_file.write('\n')
-data_e_file.write('\n')
+    feature_extraction.extract_features(tracks_ids=tracks_ids, sampling_rate=sampling_rate, current_id=current_id, errors_id=errors_id, funcoes_de_feature_extraction=funcoes_de_feature_extraction)
 
-data_file.close()
-data_s_file.close()
-data_m_file.close()
-data_e_file.close()
-
-current_id = progress.CURRENT_ID
-errors_id = progress.ERRORS_ID
-
-tracks_ids =  list(tracks.index)
-
-tracks_ids = tracks_ids[tracks_ids.index(current_id):]
+if __name__ == "__main__":
+    main()
 
 
-def runbatch(inicio, fim):
-    threadlist = []
-    for id in tracks_ids[inicio:fim] :
-        t = threading.Thread(target=teste, args=(id,))
-        threadlist.append(t)
-        t.start()
-
-    for tr in threadlist:
-        tr.join()
-        print("Finished")
-
-def etl(filename: str) -> tuple[str, float]:
+def etl(filename):
     # extract
     start_t = time.perf_counter()
-    samplerate, data = scipy.io.wavfile.read(filename)
 
-    # do some transform
-    eps = .1
-    data += np.random.normal(scale=eps, size=len(data))
-    data = np.clip(data, -1.0, 1.0)
-
-    # load (store new form)
-    new_filename = filename.removesuffix(".wav") + "-transformed.wav"
-    scipy.io.wavfile.write(new_filename, samplerate, data)
     end_t = time.perf_counter()
-
     return filename, end_t - start_t
 
 def etl_demo():
@@ -130,80 +104,7 @@ def etl_demo():
     print(f"etl took {total_duration:.2f}s total")
 
 
-utils.FfmpegLoader()
-
-
-def extract_features(data, funcoes:list):
-
-    for funcao in funcoes:
-        data_inicio_treino_x = funcao(y=data_inicio, sr=sampling_rate)
-        data_meio_treino_x = funcao(y=data_meio, sr=sampling_rate)
-        data_fim_treino_x = funcao(y=data_fim, sr=sampling_rate)
-
-
-    data_file = open(FEATURE_DIR + '/data.csv', 'a')
-    data_inicio_file = open(FEATURE_DIR + '/data_inicio.csv', 'a')
-    data_meio_file = open(FEATURE_DIR + '/data_meio.csv', 'a')
-    data_fim_file = open(FEATURE_DIR + '/data_fim.csv', 'a')
-    log_file = open(LOG_DIR + '/log.txt', 'a')
-
-    # Para cada track da base
-    for id in tracks_ids:
-        try:
-            ## Open files
-            progress_file = open(LOG_DIR + '/progress.py', 'w')
-
-            ## Salva as variaveis de progresso
-            progress_file.write(f'CURRENT_ID = {id}\n')
-            progress_file.write(f'ERRORS_ID = {errors_id}\n')
-            progress_file.close()
-
-            # Pega o caminho do arquivo de audio
-            filename = utils.get_audio_path(AUDIO_DIR, id)
-
-            # Carrega os dados do arquivo
-            data, sampling_rate = lr.load(filename, sr=sampling_rate, mono=True)
-
-            # Time decomposition
-            data_inicio, data_meio, data_fim = extrair30s(data, sampling_rate)
-
-            data_file.write(f'{id}')
-            data_inicio_file.write(f'{id}')
-            data_meio_file.write(f'{id}')
-            data_fim_file.write(f'{id}')
-
-            # Feature Extraction
-            for funcao in funcoes_de_feature_extraction:
-                data_treino_x = funcao(y=data, sr=sampling_rate)
-                data_inicio_treino_x = funcao(y=data_inicio, sr=sampling_rate)
-                data_meio_treino_x = funcao(y=data_meio, sr=sampling_rate)
-                data_fim_treino_x = funcao(y=data_fim, sr=sampling_rate)
-
-                # Adiciona as features nos csv
-                data_file.write(f',"{str(data_treino_x.tolist())}"')
-                data_inicio_file.write(f',"{str(data_inicio_treino_x.tolist())}"')
-                data_meio_file.write(f',"{str(data_meio_treino_x.tolist())}"')
-                data_fim_file.write(f',"{str(data_fim_treino_x.tolist())}"')
-
-            break
-        except Exception as e:
-            errors_id.append(id)
-            log_file.write(f'{datetime.datetime.now()} | ERROR | id={id}, error={e}\n')
-        else:
-            log_file.write(f'{datetime.datetime.now()} | SUCCESS | id={id}\n')
-        finally:
-
-    log_file.write(f'{datetime.datetime.now()} | FINISH | hopefully...\n')
-
-    data_file.close()
-    data_inicio_file.close()
-    data_meio_file.close()
-    data_fim_file.close()
-    log_file.close()
-
-
-    progress_file.close()
-
+'''
 funcao = lr.feature.mfcc
 
 data_treino_x = funcao(y=data, sr=sampling_rate)
@@ -243,7 +144,7 @@ clf = skl.svm.SVC(random_state=42)
 clf.fit(X_train, y_train)
 score = clf.score(X_test, y_test)
 print('Accuracy: {:.2%}'.format(score))
-
+'''
 
 def test_classifiers_features(classifiers, feature_sets, multi_label=False):
     columns = list(classifiers.keys()).insert(0, 'dim')
@@ -267,7 +168,7 @@ def format_scores(scores):
     scores = scores.style.apply(highlight, axis=1)
     return scores.format('{:.2%}', subset=pd.IndexSlice[:, scores.columns[1]:])
 
-
+'''
 classifiers = {
     #LogisticRegression(),
     'LR': OneVsRestClassifier(LogisticRegression()),
@@ -285,3 +186,4 @@ scores, times = test_classifiers_features(classifiers, feature_sets, multi_label
 
 ipd.display(format_scores(scores))
 ipd.display(times.style.format('{:.4f}'))
+'''
