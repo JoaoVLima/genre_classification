@@ -1,8 +1,13 @@
+from multiprocessing import Pool
+
 import librosa as lr
 from variables import *
 import utils
 import pandas as pd
+import numpy as np
+from ast import literal_eval
 import datetime
+from tqdm import tqdm
 
 
 def criar_csvs(funcoes_de_feature_extraction):
@@ -43,7 +48,7 @@ def extrair30s(data, sampling_rate):
     return data_inicio, data_meio, data_fim
 
 
-def extract_features(tracks_ids, sampling_rate, current_id, errors_id, funcoes_de_feature_extraction):
+def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, errors_id, funcoes_de_feature_extraction):
 
     data_file = pd.read_csv(FEATURE_DIR + '/data.csv', index_col='id')
     data_inicio_file = pd.read_csv(FEATURE_DIR + '/data_start.csv', index_col='id')
@@ -57,7 +62,7 @@ def extract_features(tracks_ids, sampling_rate, current_id, errors_id, funcoes_d
     data_fim_file = data_fim_file.astype(object)
 
     # Para cada track da base
-    for id in tracks_ids:
+    for id in tqdm(music_ids.values()):
         try:
             ## Open files
             progress_file = open(LOG_DIR + '/progress.py', 'w')
@@ -84,23 +89,17 @@ def extract_features(tracks_ids, sampling_rate, current_id, errors_id, funcoes_d
                 data_fim_treino_x = funcao(y=data_fim, sr=sampling_rate)
 
                 # Adiciona as features nos csv
-                data_file.iloc[id].loc[funcao.__name__] = data_treino_x
-                data_inicio_file.iloc[id].loc[funcao.__name__] = data_inicio_treino_x
-                data_meio_file.iloc[id].loc[funcao.__name__] = data_meio_treino_x
-                data_fim_file.iloc[id].loc[funcao.__name__] = data_fim_treino_x
+                data_file.loc[:, funcao.__name__][id] = data_treino_x.tolist()
+                data_inicio_file.loc[:, funcao.__name__][id] = data_inicio_treino_x.tolist()
+                data_meio_file.loc[:, funcao.__name__][id] = data_meio_treino_x.tolist()
+                data_fim_file.loc[:, funcao.__name__][id] = data_fim_treino_x.tolist()
 
             data_file.to_csv(FEATURE_DIR + '/data.csv', encoding='utf-8')
             data_inicio_file.to_csv(FEATURE_DIR + '/data_start.csv', encoding='utf-8')
             data_meio_file.to_csv(FEATURE_DIR + '/data_middle.csv', encoding='utf-8')
             data_fim_file.to_csv(FEATURE_DIR + '/data_end.csv', encoding='utf-8')
 
-            break
         except Exception as e:
             errors_id.append(id)
             log_file.write(f'{datetime.datetime.now()} | ERROR | id={id}, error={e}\n')
 
-    data_file.close()
-    data_inicio_file.close()
-    data_meio_file.close()
-    data_fim_file.close()
-    log_file.close()
