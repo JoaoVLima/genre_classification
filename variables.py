@@ -1,20 +1,22 @@
+import os
+
+pwd = os.getcwd()
+
 # Definindo variaveis para o diretorio da base
-FMA = 'L:/'
-feature = 'features'
-model = 'models'
-log = 'log'
-metadata = 'fma_metadata'
+FMA = '/run/user/1001/gvfs/smb-share:server=10.11.12.28,share=tcc/'
 small = 'fma_small'
 medium = 'fma_medium'
 large = 'fma_large'
 full = 'fma_full'
+metadata = 'fma_metadata'
 
 # Difinindo o diretorio que vamos usar
-LOG_DIR = f'{FMA+log}'
-METADATA_DIR = f'{FMA+metadata}'
-AUDIO_DIR = f'{FMA+full}'
-FEATURE_DIR = f'{FMA+feature}'
-MODEL_DIR = f'{FMA+model}'
+AUDIO_DIR = f'{FMA}/{metadata}'
+METADATA_DIR = f'{FMA}/{metadata}'
+LOG_DIR = f'{FMA}/log'
+FEATURE_DIR = f'{FMA}/features'
+
+MODEL_DIR = f'{pwd}/models'
 
 sampling_rate = 44100
 

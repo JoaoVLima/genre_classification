@@ -35,9 +35,14 @@ import utils
 import progress
 import machine_learning
 
-
 from variables import *
 from feature_extraction import *
+
+
+def create_folders(genres):
+    for genre in genres:
+        os.mkdir(f'{MODEL_DIR}/{genre}')
+
 
 def main():
     # Carregando metadados.
@@ -140,7 +145,7 @@ def main():
         'Americana',
         'Novelty',
         'Reggae - Dub',
-        'Old - Time / Historic',
+        'Old - Time | Historic',
         'Chill - out',
         'Progressive',
         'Audio Collage',
@@ -186,46 +191,36 @@ def main():
         'Choral',
         'Music',
         'Indian',
-        'Radio',
         'Art',
         'Abstract',
-        'Hip - Hop',
         'Kid - Friendly',
         'Death - Metal',
         'Bigbeat',
         'Bluegrass',
-        'Spoken',
         'Word',
         'Middle',
         'East',
         'Thrash',
         'Chamber',
-        'Music',
         'British',
-        'Folk',
         'Opera',
         'Black - Metal',
         'Rockabilly',
         'Interview',
         'Nu - Jazz',
         'Asia - Far',
-        'East',
-        'Rock',
-        'Opera',
         'Spanish',
         'Latin',
         'Romany(Gypsy)',
         'Afrobeat',
         'Modern',
-        'Jazz',
         'Big',
-        'Band / Swing',
+        'Band | Swing',
         'Jazz: Vocal',
         'Reggae - Dancehall',
         'Nerdcore',
         'Country & Western',
         'Skweee',
-        'Radio',
         'Theater',
         'Celtic',
         'Christmas',
@@ -239,28 +234,22 @@ def main():
         'Easy',
         'Listening: Vocal',
         'North',
-        'African',
         'Tango',
         'Fado',
         'Talk',
-        'Radio',
         'Symphony',
         'Pacific',
         'Musical',
-        'Theater',
         'South',
-        'Indian',
         'Traditional',
         'Salsa',
         'Banter',
         'Western',
         'Swing',
         'N.Indian',
-        'Traditional',
         'Deep',
-        'Funk',
         'Be - Bop',
-        'Bollywood',
+        'Bollywood'
     ]
 
     current_id = progress.CURRENT_ID
@@ -288,6 +277,7 @@ def etl(filename):
     end_t = time.perf_counter()
     return filename, end_t - start_t
 
+
 def etl_demo():
     filenames = [f"sounds/example{n}.wav" for n in range(24)]
     start_t = time.perf_counter()
@@ -302,6 +292,3 @@ def etl_demo():
     end_t = time.perf_counter()
     total_duration = end_t - start_t
     print(f"etl took {total_duration:.2f}s total")
-
-
-
