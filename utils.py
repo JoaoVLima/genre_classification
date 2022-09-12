@@ -85,10 +85,10 @@ class Loader:
 class RawAudioLoader(Loader):
     def __init__(self, sampling_rate=SAMPLING_RATE):
         self.sampling_rate = sampling_rate
-        self.shape = (NB_AUDIO_SAMPLES * sampling_rate // SAMPLING_RATE,)
+        #self.shape = (NB_AUDIO_SAMPLES * sampling_rate // SAMPLING_RATE,)
 
     def load(self, filepath):
-        return self._load(filepath)[:self.shape[0]]
+        return self._load(filepath)
 
 
 class LibrosaLoader(RawAudioLoader):

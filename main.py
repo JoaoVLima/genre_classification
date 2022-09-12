@@ -30,13 +30,13 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.multiclass import OneVsRestClassifier
 
-import feature_extraction
+# import feature
+import feature
 import utils
 import progress
 import machine_learning
 
 from variables import *
-from feature_extraction import *
 
 
 def create_folders(genres):
@@ -47,7 +47,7 @@ def create_folders(genres):
 def main():
     # Carregando metadados.
     tracks = utils.load(METADATA_DIR + '/tracks.csv')
-    # genres = utils.load(METADATA_DIR + '/genres.csv')
+    genres = utils.load(METADATA_DIR + '/genres.csv')
 
     # Tratando a Base de dados FMA
     # tracks_sem_genero = tracks[('track', 'genre_top')].isna()
@@ -60,19 +60,19 @@ def main():
 
     # Feature Extraction
     funcoes_de_feature_extraction = [
-        lr.feature.chroma_stft,
-        lr.feature.chroma_cqt,
-        lr.feature.chroma_cens,
-        lr.feature.melspectrogram,
-        lr.feature.mfcc,
-        lr.feature.spectral_centroid,
-        lr.feature.spectral_bandwidth,
-        lr.feature.spectral_contrast,
-        lr.feature.spectral_rolloff,
-        lr.feature.poly_features,
-        lr.feature.tonnetz,
-        lr.feature.tempogram,
-        lr.feature.fourier_tempogram
+        'chroma_stft',
+        'chroma_cqt',
+        'chroma_cens',
+        'melspectrogram',
+        'mfcc',
+        'spectral_centroid',
+        'spectral_bandwidth',
+        'spectral_contrast',
+        'spectral_rolloff',
+        'poly_features',
+        'tonnetz',
+        'tempogram',
+        'fourier_tempogram'
     ]
 
     funcoes_de_ml = [
@@ -261,9 +261,10 @@ def main():
     music_ids = dict(tracks[('track', 'genre_top')])
     music_ids = {v: k for k, v in music_ids.items()}
 
-    feature_extraction.extract_features(funcoes_de_feature_extraction=funcoes_de_feature_extraction, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, sampling_rate=sampling_rate, current_id=current_id, errors_id=errors_id)
 
-    machine_learning.train_models(funcoes_de_feature_extraction=funcoes_de_feature_extraction, funcoes_de_ml=funcoes_de_ml, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, tracks=tracks)
+    # feature.extract_features(funcoes_de_feature_extraction=funcoes_de_feature_extraction, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, sampling_rate=sampling_rate, current_id=current_id, errors_id=errors_id)
+    #
+    # machine_learning.train_models(funcoes_de_feature_extraction=funcoes_de_feature_extraction, funcoes_de_ml=funcoes_de_ml, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, tracks=tracks)
 
 
 if __name__ == "__main__":

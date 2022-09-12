@@ -9,6 +9,87 @@ from ast import literal_eval
 import datetime
 from tqdm import tqdm
 
+# [
+#     'chroma_stft',
+#     'chroma_cqt',
+#     'chroma_cens',
+#     'melspectrogram',
+#     'mfcc',
+#     'spectral_centroid',
+#     'spectral_bandwidth',
+#     'spectral_contrast',
+#     'spectral_rolloff',
+#     'poly_features',
+#     'tonnetz',
+#     'tempogram',
+#     'fourier_tempogram'
+# ]
+#
+# [
+#     lr.feature.chroma_stft,
+#     lr.feature.chroma_cqt,
+#     lr.feature.chroma_cens,
+#     lr.feature.melspectrogram,
+#     lr.feature.mfcc,
+#     lr.feature.spectral_centroid,
+#     lr.feature.spectral_bandwidth,
+#     lr.feature.spectral_contrast,
+#     lr.feature.spectral_rolloff,
+#     lr.feature.poly_features,
+#     lr.feature.tonnetz,
+#     lr.feature.tempogram,
+#     lr.feature.fourier_tempogram
+# ]
+
+# feature_extraction = feature.Feature.extraction_method('mfcc')
+#
+# feature_extraction(audio).extract()
+
+
+class Feature:
+    def __init__(self, *args, **kwargs):
+        self.data = None
+        self.audio = kwargs.get('audio')
+        if self.audio:
+            self.sampling_rate = self.audio.sampling_rate
+
+    def extract(self, *args, **kwargs):
+        pass
+
+    @staticmethod
+    def extraction_method(feature=None):
+        features = {
+            # 'chroma_stft': Chroma_stft,
+            # 'chroma_cqt': Chroma_cqt,
+            # 'chroma_cens': Chroma_cens,
+            # 'melspectrogram': Melspectrogram,
+            'mfcc': MFCC,
+            # 'spectral_centroid': Spectral_centroid,
+            # 'spectral_bandwidth': Spectral_bandwidth,
+            # 'spectral_contrast': Spectral_contrast,
+            # 'spectral_rolloff': Spectral_rolloff,
+            # 'poly_features': Poly_features,
+            # 'tonnetz': Tonnetz,
+            # 'tempogram': Tempogram,
+            # 'fourier_tempogram': Fourier_tempogram,
+        }
+        try:
+            return features[feature]
+        except:
+            return Feature
+
+
+class MFCC(Feature):
+    def __init__(self, *args, **kwargs):
+        super(MFCC, self).__init__(*args, **kwargs)
+
+    def extract(self, *args, **kwargs):
+        if not self.audio:
+            return []
+
+        self.data = lr.feature.mfcc(y=self.audio.data, sr=self.audio.sampling_rate)
+        return self.audio
+
 
 def criar_csvs(funcoes_de_feature_extraction):
     data_files = [
@@ -48,8 +129,8 @@ def extrair30s(data, sampling_rate):
     return data_inicio, data_meio, data_fim
 
 
-def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, errors_id, funcoes_de_feature_extraction):
-
+def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, errors_id,
+                     funcoes_de_feature_extraction):
     data_file = pd.read_csv(FEATURE_DIR + '/data.csv', index_col='id')
     data_inicio_file = pd.read_csv(FEATURE_DIR + '/data_start.csv', index_col='id')
     data_meio_file = pd.read_csv(FEATURE_DIR + '/data_middle.csv', index_col='id')
@@ -102,4 +183,3 @@ def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, e
         except Exception as e:
             errors_id.append(id)
             log_file.write(f'{datetime.datetime.now()} | ERROR | id={id}, error={e}\n')
-
