@@ -8,13 +8,27 @@ import numpy as np
 from ast import literal_eval
 import datetime
 from tqdm import tqdm
-from sklearn.svm import LinearSVC
+
+import sklearn as skl
+# import sklearn.utils, sklearn.preprocessing, sklearn.decomposition, sklearn.svm
+# from sklearn.utils import shuffle
+# from sklearn.preprocessing import MultiLabelBinarizer, LabelEncoder, LabelBinarizer, StandardScaler
+# from sklearn.linear_model import LogisticRegression
+# from sklearn.neighbors import KNeighborsClassifier
+# from sklearn.svm import SVC, LinearSVC
+# from sklearn.tree import DecisionTreeClassifier
+# from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+# from sklearn.neural_network import MLPClassifier
+# from sklearn.naive_bayes import GaussianNB
+# from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+# from sklearn.multiclass import OneVsRestClassifier
 import pickle
 
 def tratar_campo(campo):
     if not pd.isna(campo):
         campo = literal_eval(campo)
     return campo
+
 
 def train_models(funcoes_de_feature_extraction, music_ids, funcoes_de_ml, genres, tracks_ids, tracks):
     data_file = pd.read_csv(FEATURE_DIR + '/data.csv', index_col='id')
@@ -123,6 +137,8 @@ ipd.display(times.style.format('{:.4f}'))
 class MachineLearning:
     def __init__(self, *args, **kwargs):
         self.data = None
+        self.model = None
+        self.score = None
         self.get_params(*args, **kwargs)
 
     def get_params(self, *args, **kwargs):
@@ -132,21 +148,119 @@ class MachineLearning:
         pass
 
     @staticmethod
-    def training_method(feature=None):
-        features = {
-            'chroma_stft': Chroma_stft(),
+    def training_method(algorithm=None):
+        ml_algorithms = {
+            'knn': KNN(),
         }
         try:
-            return features[feature]
+            return ml_algorithms[algorithm]
         except:
             return MachineLearning()
 
 
-class Chroma_stft(Feature):
-    def extract(self, *args, **kwargs):
+class KNN(MachineLearning):
+    def train(self, *args, **kwargs):
         self.get_params(*args, **kwargs)
-        if self.audio is None:
+        if self.data is None:
             return []
 
-        self.data = lr.feature.chroma_stft(y=self.audio, sr=self.sampling_rate)
-#         return self.data
+        # X_train, X_test, y_train, y_test
+        X_train = self.data['X_train']
+        y_train = self.data['y_train']
+        X_test = self.data['X_test']
+        y_test = self.data['y_test']
+
+        self.model = skl.neighbors.KNeighborsClassifier(n_neighbors=3)
+        self.model.fit(X_train, y_train)
+        self.score = self.model.score(X_test, y_test)
+        return self.model
+
+
+class NaiveBayes(MachineLearning):
+    def train(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.data is None:
+            return []
+
+        # X_train, X_test, y_train, y_test
+        X_train = self.data['X_train']
+        y_train = self.data['y_train']
+        X_test = self.data['X_test']
+        y_test = self.data['y_test']
+
+        self.model = skl.naive_bayes.GaussianNB()
+        self.model.fit(X_train, y_train)
+        self.score = self.model.score(X_test, y_test)
+        return self.model
+
+
+class RandomForest(MachineLearning):
+    def train(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.data is None:
+            return []
+
+        # X_train, X_test, y_train, y_test
+        X_train = self.data['X_train']
+        y_train = self.data['y_train']
+        X_test = self.data['X_test']
+        y_test = self.data['y_test']
+
+        self.model = skl.ensemble.RandomForestClassifier()
+        self.model.fit(X_train, y_train)
+        self.score = self.model.score(X_test, y_test)
+        return self.model
+
+
+class DecisionTree(MachineLearning):
+    def train(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.data is None:
+            return []
+
+        # X_train, X_test, y_train, y_test
+        X_train = self.data['X_train']
+        y_train = self.data['y_train']
+        X_test = self.data['X_test']
+        y_test = self.data['y_test']
+
+        self.model = skl.tree.DecisionTreeClassifier()
+        self.model.fit(X_train, y_train)
+        self.score = self.model.score(X_test, y_test)
+        return self.model
+
+
+class SVC(MachineLearning):
+    def train(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.data is None:
+            return []
+
+        # X_train, X_test, y_train, y_test
+        X_train = self.data['X_train']
+        y_train = self.data['y_train']
+        X_test = self.data['X_test']
+        y_test = self.data['y_test']
+
+        self.model = skl.svm.SVC()
+        self.model.fit(X_train, y_train)
+        self.score = self.model.score(X_test, y_test)
+        return self.model
+
+
+class LinearSVC(MachineLearning):
+    def train(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.data is None:
+            return []
+
+        # X_train, X_test, y_train, y_test
+        X_train = self.data['X_train']
+        y_train = self.data['y_train']
+        X_test = self.data['X_test']
+        y_test = self.data['y_test']
+
+        self.model = skl.svm.LinearSVC()
+        self.model.fit(X_train, y_train)
+        self.score = self.model.score(X_test, y_test)
+        return self.model

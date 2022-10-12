@@ -9,6 +9,7 @@ import multiprocessing
 import multiprocessing.sharedctypes as sharedctypes
 import os.path
 import ast
+import re
 
 # Number of samples per 30s audio clip.
 NB_AUDIO_SAMPLES = 1321967
@@ -99,6 +100,7 @@ class LibrosaLoader(RawAudioLoader):
         # x, sr = lr.load(filepath, sr=sr)
         return x
 
+
 class FfmpegLoader(RawAudioLoader):
     def _load(self, filepath):
         """Fastest and less CPU intensive loading method."""
@@ -177,3 +179,18 @@ def build_sample_loader(audio_dir, Y, loader):
                 return self.X[:batch_size], self.Y[:batch_size]
 
     return SampleLoader
+
+
+def create_folders_genres(dir, genres):
+    for genre in genres:
+        os.mkdir(f'{dir}/{genre}')
+
+
+def create_folders_ml(dir, genres, mls):
+    for genre in genres:
+        for ml in mls:
+            os.mkdir(f'{dir}/{genre}')
+
+
+def tratar_nome_genero(string):
+    return re.sub(r'[\W_]+', ' ', string).strip()

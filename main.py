@@ -10,26 +10,11 @@ import json
 import threading
 import time
 from multiprocessing import Pool
-import re
 
 from tqdm.notebook import tqdm as tqdm_notebook
 
 import keras
 from keras.layers import Activation, Dense, Conv1D, Conv2D, MaxPooling1D, Flatten, Reshape
-
-import sklearn as skl
-import sklearn.utils, sklearn.preprocessing, sklearn.decomposition, sklearn.svm
-from sklearn.utils import shuffle
-from sklearn.preprocessing import MultiLabelBinarizer, LabelEncoder, LabelBinarizer, StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC, LinearSVC
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.neural_network import MLPClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.multiclass import OneVsRestClassifier
 
 # import feature
 import feature
@@ -38,21 +23,6 @@ import progress
 import machine_learning
 
 from variables import *
-
-
-def create_folders_genres(genres):
-    for genre in genres:
-        os.mkdir(f'{MODEL_DIR}/{genre}')
-
-
-def create_folders_ml(genres, mls):
-    for genre in genres:
-        for ml in mls:
-            os.mkdir(f'{MODEL_DIR}/{genre}')
-
-
-def tratar_nome_genero(string):
-    return re.sub(r'[\W_]+', ' ', string).strip()
 
 
 def main():
@@ -273,7 +243,7 @@ def main():
     music_ids = {v: k for k, v in music_ids.items()}
 
 
-    # feature.extract_features(funcoes_de_feature_extraction=funcoes_de_feature_extraction, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, sampling_rate=sampling_rate, current_id=current_id, errors_id=errors_id)
+    feature.extract_features(funcoes_de_feature_extraction=funcoes_de_feature_extraction, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, sampling_rate=sampling_rate, current_id=current_id, errors_id=errors_id)
 
     machine_learning.train_models(funcoes_de_feature_extraction=funcoes_de_feature_extraction, funcoes_de_ml=funcoes_de_ml, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, tracks=tracks)
 
