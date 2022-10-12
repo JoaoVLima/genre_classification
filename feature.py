@@ -84,7 +84,7 @@ def extrair30s(data, sampling_rate):
     return data_inicio, data_meio, data_fim
 
 
-def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, errors_id, funcoes_de_feature_extraction):
+def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, errors_id, fe_functions):
     data_file = pd.read_csv(FEATURE_DIR + '/data.csv', index_col='id')
     data_inicio_file = pd.read_csv(FEATURE_DIR + '/data_start.csv', index_col='id')
     data_meio_file = pd.read_csv(FEATURE_DIR + '/data_middle.csv', index_col='id')
@@ -118,10 +118,11 @@ def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, e
 
             # Feature Extraction
             for funcao in funcoes_de_feature_extraction:
-                data_treino_x = Feature.extraction_method(funcao).extract(audio=data, sampling_rate=sampling_rate)
-                data_inicio_treino_x = Feature.extraction_method(funcao).extract(audio=data_inicio, sampling_rate=sampling_rate)
-                data_meio_treino_x = Feature.extraction_method(funcao).extract(audio=data_meio, sampling_rate=sampling_rate)
-                data_fim_treino_x = Feature.extraction_method(funcao).extract(audio=data_fim, sampling_rate=sampling_rate)
+                feature = Feature.extraction_method(funcao)
+                data_treino_x = feature.extract(audio=data, sampling_rate=sampling_rate)
+                data_inicio_treino_x = feature.extract(audio=data_inicio, sampling_rate=sampling_rate)
+                data_meio_treino_x = feature.extract(audio=data_meio, sampling_rate=sampling_rate)
+                data_fim_treino_x = feature.extract(audio=data_fim, sampling_rate=sampling_rate)
 
                 # Adiciona as features nos csv
                 data_file.loc[:, funcao][id] = data_treino_x.tolist()

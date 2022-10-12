@@ -30,7 +30,7 @@ def tratar_campo(campo):
     return campo
 
 
-def train_models(funcoes_de_feature_extraction, music_ids, funcoes_de_ml, genres, tracks_ids, tracks):
+def train_models(fe_functions, music_ids, funcoes_de_ml, genres, tracks_ids, tracks):
     data_file = pd.read_csv(FEATURE_DIR + '/data.csv', index_col='id')
     data_inicio_file = pd.read_csv(FEATURE_DIR + '/data_start.csv', index_col='id')
     data_meio_file = pd.read_csv(FEATURE_DIR + '/data_middle.csv', index_col='id')
@@ -48,7 +48,7 @@ def train_models(funcoes_de_feature_extraction, music_ids, funcoes_de_ml, genres
             for ml in funcoes_de_ml:
                 model = ml()
 
-                features = data.loc[:, [funcao.__name__ for funcao in funcoes_de_feature_extraction]][list(music_ids.values())].tolist()
+                features = data.loc[:, [funcao.__name__ for funcao in fe_functions]][list(music_ids.values())].tolist()
 
                 results = [1 if i == genre else 0 for i in music_ids]
 

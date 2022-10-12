@@ -26,21 +26,21 @@ from variables import *
 
 
 def main():
-    # Carregando metadados.
+    # Carregando metadados
     tracks = utils.load(METADATA_DIR + '/tracks.csv')
     genres = utils.load(METADATA_DIR + '/genres.csv')
 
     # Tratando a Base de dados FMA
-    # tracks_sem_genero = tracks[('track', 'genre_top')].isna()
-    tracks_com_genero = tracks[('track', 'genre_top')].notna()
-    tracks = tracks[tracks_com_genero]
+    # tracks_without_genres = tracks[('track', 'genre_top')].isna()
+    tracks_with_genres = tracks[('track', 'genre_top')].notna()
+    tracks = tracks[tracks_with_genres]
 
     # Limitando a base
     # tracks_subset = tracks['set', 'subset'] <= 'full'
     # tracks = tracks[tracks_subset]
 
     # Feature Extraction
-    funcoes_de_feature_extraction = [
+    fe_functions = [
         'chroma_stft',
         'chroma_cqt',
         'chroma_cens',
@@ -53,13 +53,17 @@ def main():
         'poly_features',
         'tonnetz',
         'tempogram',
-        'fourier_tempogram'
+        'fourier_tempogram',
     ]
 
-    funcoes_de_ml = [
-        LinearSVC,
-        SVC,
-        KNeighborsClassifier
+    # Machine Learning
+    ml_functions = [
+        'knn',
+        'naivebayes',
+        'randomforest',
+        'decisiontree',
+        'svc',
+        'linearsvc',
     ]
 
     genres = [
@@ -242,10 +246,20 @@ def main():
     music_ids = dict(tracks[('track', 'genre_top')])
     music_ids = {v: k for k, v in music_ids.items()}
 
+    feature.extract_features(fe_functions=fe_functions,
+                             music_ids=music_ids,
+                             genres=genres,
+                             tracks_ids=tracks_ids,
+                             sampling_rate=sampling_rate,
+                             current_id=current_id,
+                             errors_id=errors_id)
 
-    feature.extract_features(funcoes_de_feature_extraction=funcoes_de_feature_extraction, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, sampling_rate=sampling_rate, current_id=current_id, errors_id=errors_id)
-
-    machine_learning.train_models(funcoes_de_feature_extraction=funcoes_de_feature_extraction, funcoes_de_ml=funcoes_de_ml, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, tracks=tracks)
+    machine_learning.train_models(fe_functions=fe_functions,
+                                  funcoes_de_ml=fe_functions,
+                                  music_ids=music_ids,
+                                  genres=genres,
+                                  tracks_ids=tracks_ids,
+                                  tracks=tracks)
 
 
 if __name__ == "__main__":
