@@ -151,6 +151,11 @@ class MachineLearning:
     def training_method(algorithm=None):
         ml_algorithms = {
             'knn': KNN(),
+            'naivebayes': NaiveBayes(),
+            'randomforest': RandomForest(),
+            'decisiontree': DecisionTree(),
+            'svc': SVC(),
+            'linearsvc': LinearSVC(),
         }
         try:
             return ml_algorithms[algorithm]
