@@ -10,6 +10,7 @@ import json
 import threading
 import time
 from multiprocessing import Pool
+import re
 
 from tqdm.notebook import tqdm as tqdm_notebook
 
@@ -39,9 +40,19 @@ import machine_learning
 from variables import *
 
 
-def create_folders(genres):
+def create_folders_genres(genres):
     for genre in genres:
         os.mkdir(f'{MODEL_DIR}/{genre}')
+
+
+def create_folders_ml(genres, mls):
+    for genre in genres:
+        for ml in mls:
+            os.mkdir(f'{MODEL_DIR}/{genre}')
+
+
+def tratar_nome_genero(string):
+    return re.sub(r'[\W_]+', ' ', string).strip()
 
 
 def main():
@@ -89,19 +100,19 @@ def main():
         'Pop',
         'Folk',
         'Punk',
-        'Avant - Garde',
-        'Hip - Hop',
+        'Avant Garde',
+        'Hip Hop',
         'Noise',
         'Ambient',
         'Experimental Pop',
         'Electroacoustic',
-        'Lo - Fi',
+        'Lo Fi',
         'Soundtrack',
         'Ambient Electronic',
-        'Indie - Rock',
+        'Indie Rock',
         'International',
         'Improv',
-        'Singer - Songwriter',
+        'Singer Songwriter',
         'Jazz',
         'Classical',
         'Garage',
@@ -110,49 +121,49 @@ def main():
         'Musique Concrete',
         'Glitch',
         'Drone',
-        'Psych - Rock',
-        'Loud - Rock',
-        'Psych - Folk',
+        'Psych Rock',
+        'Loud Rock',
+        'Psych Folk',
         'Industrial',
         'Chip Music',
         'Techno',
-        'Noise - Rock',
+        'Noise Rock',
         'Downtempo',
         'Country',
-        'Post - Rock',
+        'Post Rock',
         'Sound Collage',
         'Spoken',
-        'Post - Punk',
+        'Post Punk',
         'Synth Pop',
         'Blues',
-        'Trip - Hop',
-        'Free - Jazz',
+        'Trip Hop',
+        'Free Jazz',
         'Unclassifiable',
-        'Soul - RnB',
+        'Soul RnB',
         'Metal',
         'House',
         'Hardcore',
         'Dance',
         'Sound Art',
         'Minimalism',
-        'Freak - Folk',
+        'Freak Folk',
         'Contemporary Classical',
         'Chiptune',
-        'Hip - Hop Beats',
+        'Hip Hop Beats',
         'Dubstep',
         'Minimal Electronic',
-        'Power - Pop',
+        'Power Pop',
         'Americana',
         'Novelty',
-        'Reggae - Dub',
-        'Old - Time | Historic',
-        'Chill - out',
+        'Reggae Dub',
+        'Old Time Historic',
+        'Chill out',
         'Progressive',
         'Audio Collage',
         'Funk',
         'Shoegaze',
-        'Free - Folk',
-        'Alternative Hip - Hop',
+        'Free Folk',
+        'Alternative Hip Hop',
         'Breakbeat',
         'Easy Listening',
         'Europe',
@@ -163,13 +174,13 @@ def main():
         'Balkan',
         'No Wave',
         'Latin America',
-        'Electro - Punk',
+        'Electro Punk',
         'Radio',
         'New Wave',
-        'Breakcore - Hard',
-        'Drum & Bass',
+        'Breakcore Hard',
+        'Drum Bass',
         'Spoken Weird',
-        'Space - Rock',
+        'Space Rock',
         'Goth',
         'Lounge',
         'French',
@@ -181,7 +192,7 @@ def main():
         'Sound Effects',
         'Poetry',
         '20th Century Classical',
-        'Jazz: Out',
+        'Jazz Out',
         'Holiday',
         'Surf',
         'Jungle',
@@ -193,8 +204,8 @@ def main():
         'Indian',
         'Art',
         'Abstract',
-        'Kid - Friendly',
-        'Death - Metal',
+        'Kid Friendly',
+        'Death Metal',
         'Bigbeat',
         'Bluegrass',
         'Word',
@@ -204,22 +215,22 @@ def main():
         'Chamber',
         'British',
         'Opera',
-        'Black - Metal',
+        'Black Metal',
         'Rockabilly',
         'Interview',
-        'Nu - Jazz',
-        'Asia - Far',
+        'Nu Jazz',
+        'Asia Far',
         'Spanish',
         'Latin',
-        'Romany(Gypsy)',
+        'Romany Gypsy',
         'Afrobeat',
         'Modern',
         'Big',
-        'Band | Swing',
-        'Jazz: Vocal',
-        'Reggae - Dancehall',
+        'Band Swing',
+        'Jazz Vocal',
+        'Reggae Dancehall',
         'Nerdcore',
-        'Country & Western',
+        'Country Western',
         'Skweee',
         'Theater',
         'Celtic',
@@ -232,7 +243,7 @@ def main():
         'Wonky',
         'Flamenco',
         'Easy',
-        'Listening: Vocal',
+        'Listening Vocal',
         'North',
         'Tango',
         'Fado',
@@ -246,9 +257,9 @@ def main():
         'Banter',
         'Western',
         'Swing',
-        'N.Indian',
+        'N Indian',
         'Deep',
-        'Be - Bop',
+        'Be Bop',
         'Bollywood'
     ]
 
@@ -263,8 +274,8 @@ def main():
 
 
     # feature.extract_features(funcoes_de_feature_extraction=funcoes_de_feature_extraction, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, sampling_rate=sampling_rate, current_id=current_id, errors_id=errors_id)
-    #
-    # machine_learning.train_models(funcoes_de_feature_extraction=funcoes_de_feature_extraction, funcoes_de_ml=funcoes_de_ml, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, tracks=tracks)
+
+    machine_learning.train_models(funcoes_de_feature_extraction=funcoes_de_feature_extraction, funcoes_de_ml=funcoes_de_ml, music_ids=music_ids, genres=genres, tracks_ids=tracks_ids, tracks=tracks)
 
 
 if __name__ == "__main__":

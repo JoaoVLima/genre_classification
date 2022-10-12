@@ -3,7 +3,8 @@ import os
 pwd = os.getcwd()
 
 # Definindo variaveis para o diretorio da base
-FMA = '/run/user/1001/gvfs/smb-share:server=10.11.12.28,share=tcc'
+# FMA = '/run/user/1001/gvfs/smb-share:server=10.11.12.28,share=tcc'
+FMA = 'L:'
 small = 'fma_small'
 medium = 'fma_medium'
 large = 'fma_large'

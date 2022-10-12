@@ -46,51 +46,6 @@ from tqdm import tqdm
 # feature_extraction(audio).extract()
 
 
-class Feature:
-    def __init__(self, *args, **kwargs):
-        self.data = None
-        self.audio = kwargs.get('audio')
-        if self.audio:
-            self.sampling_rate = self.audio.sampling_rate
-
-    def extract(self, *args, **kwargs):
-        pass
-
-    @staticmethod
-    def extraction_method(feature=None):
-        features = {
-            # 'chroma_stft': Chroma_stft,
-            # 'chroma_cqt': Chroma_cqt,
-            # 'chroma_cens': Chroma_cens,
-            # 'melspectrogram': Melspectrogram,
-            'mfcc': MFCC,
-            # 'spectral_centroid': Spectral_centroid,
-            # 'spectral_bandwidth': Spectral_bandwidth,
-            # 'spectral_contrast': Spectral_contrast,
-            # 'spectral_rolloff': Spectral_rolloff,
-            # 'poly_features': Poly_features,
-            # 'tonnetz': Tonnetz,
-            # 'tempogram': Tempogram,
-            # 'fourier_tempogram': Fourier_tempogram,
-        }
-        try:
-            return features[feature]
-        except:
-            return Feature
-
-
-class MFCC(Feature):
-    def __init__(self, *args, **kwargs):
-        super(MFCC, self).__init__(*args, **kwargs)
-
-    def extract(self, *args, **kwargs):
-        if not self.audio:
-            return []
-
-        self.data = lr.feature.mfcc(y=self.audio.data, sr=self.audio.sampling_rate)
-        return self.audio
-
-
 def criar_csvs(funcoes_de_feature_extraction):
     data_files = [
         open(FEATURE_DIR + '/data.csv', 'w'),
@@ -104,7 +59,7 @@ def criar_csvs(funcoes_de_feature_extraction):
 
     for funcao in funcoes_de_feature_extraction:
         for data_file in data_files:
-            data_file.write(f',{funcao.__name__}')
+            data_file.write(f',{funcao}')
 
     for data_file in data_files:
         data_file.write('\n')
@@ -129,8 +84,7 @@ def extrair30s(data, sampling_rate):
     return data_inicio, data_meio, data_fim
 
 
-def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, errors_id,
-                     funcoes_de_feature_extraction):
+def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, errors_id, funcoes_de_feature_extraction):
     data_file = pd.read_csv(FEATURE_DIR + '/data.csv', index_col='id')
     data_inicio_file = pd.read_csv(FEATURE_DIR + '/data_start.csv', index_col='id')
     data_meio_file = pd.read_csv(FEATURE_DIR + '/data_middle.csv', index_col='id')
@@ -164,16 +118,16 @@ def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, e
 
             # Feature Extraction
             for funcao in funcoes_de_feature_extraction:
-                data_treino_x = funcao(y=data, sr=sampling_rate)
-                data_inicio_treino_x = funcao(y=data_inicio, sr=sampling_rate)
-                data_meio_treino_x = funcao(y=data_meio, sr=sampling_rate)
-                data_fim_treino_x = funcao(y=data_fim, sr=sampling_rate)
+                data_treino_x = Feature.extraction_method(funcao).extract(audio=data, sampling_rate=sampling_rate)
+                data_inicio_treino_x = Feature.extraction_method(funcao).extract(audio=data_inicio, sampling_rate=sampling_rate)
+                data_meio_treino_x = Feature.extraction_method(funcao).extract(audio=data_meio, sampling_rate=sampling_rate)
+                data_fim_treino_x = Feature.extraction_method(funcao).extract(audio=data_fim, sampling_rate=sampling_rate)
 
                 # Adiciona as features nos csv
-                data_file.loc[:, funcao.__name__][id] = data_treino_x.tolist()
-                data_inicio_file.loc[:, funcao.__name__][id] = data_inicio_treino_x.tolist()
-                data_meio_file.loc[:, funcao.__name__][id] = data_meio_treino_x.tolist()
-                data_fim_file.loc[:, funcao.__name__][id] = data_fim_treino_x.tolist()
+                data_file.loc[:, funcao][id] = data_treino_x.tolist()
+                data_inicio_file.loc[:, funcao][id] = data_inicio_treino_x.tolist()
+                data_meio_file.loc[:, funcao][id] = data_meio_treino_x.tolist()
+                data_fim_file.loc[:, funcao][id] = data_fim_treino_x.tolist()
 
             data_file.to_csv(FEATURE_DIR + '/data.csv', encoding='utf-8')
             data_inicio_file.to_csv(FEATURE_DIR + '/data_start.csv', encoding='utf-8')
@@ -183,3 +137,170 @@ def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, e
         except Exception as e:
             errors_id.append(id)
             log_file.write(f'{datetime.datetime.now()} | ERROR | id={id}, error={e}\n')
+
+
+class Feature:
+    def __init__(self, *args, **kwargs):
+        self.data = None
+        self.audio = None
+        self.sampling_rate = None
+        self.get_params(*args, **kwargs)
+
+    def get_params(self, *args, **kwargs):
+        self.audio = kwargs.get('audio')
+        self.sampling_rate = kwargs.get('sampling_rate')
+
+    def extract(self, *args, **kwargs):
+        pass
+
+    @staticmethod
+    def extraction_method(feature=None):
+        features = {
+            'chroma_stft': ChromaStft(),
+            'chroma_cqt': ChromaCqt(),
+            'chroma_cens': ChromaCens(),
+            'melspectrogram': Melspectrogram(),
+            'mfcc': MFCC(),
+            'spectral_centroid': SpectralCentroid(),
+            'spectral_bandwidth': SpectralBandwidth(),
+            'spectral_contrast': SpectralContrast(),
+            'spectral_rolloff': SpectralRolloff(),
+            'poly_features': PolyFeatures(),
+            'tonnetz': Tonnetz(),
+            'tempogram': Tempogram(),
+            'fourier_tempogram': FourierTempogram(),
+        }
+        try:
+            return features[feature]
+        except:
+            return Feature()
+
+
+class ChromaStft(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.chroma_stft(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class ChromaCqt(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.chroma_cqt(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class ChromaCens(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.chroma_cens(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class Melspectrogram(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.melspectrogram(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class MFCC(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.mfcc(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class SpectralCentroid(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.spectral_centroid(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class SpectralBandwidth(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.spectral_bandwidth(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class SpectralContrast(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.spectral_contrast(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class SpectralRolloff(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.spectral_rolloff(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class PolyFeatures(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.poly_features(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class Tonnetz(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.tonnetz(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class Tempogram(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.tempogram(y=self.audio, sr=self.sampling_rate)
+        return self.data
+
+
+class FourierTempogram(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.fourier_tempogram(y=self.audio, sr=self.sampling_rate)
+        return self.data

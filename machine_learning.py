@@ -118,3 +118,35 @@ scores, times = test_classifiers_features(classifiers, feature_sets, multi_label
 ipd.display(format_scores(scores))
 ipd.display(times.style.format('{:.4f}'))
 '''
+
+
+class MachineLearning:
+    def __init__(self, *args, **kwargs):
+        self.data = None
+        self.get_params(*args, **kwargs)
+
+    def get_params(self, *args, **kwargs):
+        self.data = kwargs.get('data')
+
+    def train(self, *args, **kwargs):
+        pass
+
+    @staticmethod
+    def training_method(feature=None):
+        features = {
+            'chroma_stft': Chroma_stft(),
+        }
+        try:
+            return features[feature]
+        except:
+            return MachineLearning()
+
+
+class Chroma_stft(Feature):
+    def extract(self, *args, **kwargs):
+        self.get_params(*args, **kwargs)
+        if self.audio is None:
+            return []
+
+        self.data = lr.feature.chroma_stft(y=self.audio, sr=self.sampling_rate)
+#         return self.data
