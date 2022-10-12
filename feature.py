@@ -67,7 +67,7 @@ def criar_csvs(funcoes_de_feature_extraction):
     for data_file in data_files:
         data_file.close()
 
-
+# TODO: Caso a musica tenha menos que 1min 30sec, dividir em 3 partes.
 def extrair30s(data, sampling_rate):
     segundos = int(data.size / sampling_rate)
 
@@ -96,8 +96,9 @@ def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, e
     data_meio_file = data_meio_file.astype(object)
     data_fim_file = data_fim_file.astype(object)
 
+    # TODO: Adicionar Threads/Paralelismo nessa etapa
     # Para cada track da base
-    for id in tqdm(music_ids.values()):
+    for id in tqdm(tracks_ids):
         try:
             ## Open files
             progress_file = open(LOG_DIR + '/progress.py', 'w')
@@ -117,7 +118,7 @@ def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, e
             data_inicio, data_meio, data_fim = extrair30s(data, sampling_rate)
 
             # Feature Extraction
-            for funcao in funcoes_de_feature_extraction:
+            for funcao in fe_functions:
                 feature = Feature.extraction_method(funcao)
                 data_treino_x = feature.extract(audio=data, sampling_rate=sampling_rate)
                 data_inicio_treino_x = feature.extract(audio=data_inicio, sampling_rate=sampling_rate)

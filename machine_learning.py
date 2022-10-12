@@ -42,7 +42,7 @@ def train_models(fe_functions, music_ids, funcoes_de_ml, genres, tracks_ids, tra
         data_meio_file,
         data_fim_file,
     ]
-
+    # TODO: Adicionar Threads/Paralelismo nessa etapa
     for i, data in enumerate(datas):
         for genre, id in music_ids.items():
             for ml in funcoes_de_ml:

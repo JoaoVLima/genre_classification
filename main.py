@@ -13,8 +13,8 @@ from multiprocessing import Pool
 
 from tqdm.notebook import tqdm as tqdm_notebook
 
-import keras
-from keras.layers import Activation, Dense, Conv1D, Conv2D, MaxPooling1D, Flatten, Reshape
+# import keras
+# from keras.layers import Activation, Dense, Conv1D, Conv2D, MaxPooling1D, Flatten, Reshape
 
 # import feature
 import feature
@@ -24,16 +24,18 @@ import machine_learning
 
 from variables import *
 
+# TODO: Deixar o codigo no seguinte padrão:
+#   1 - Codigo em Ingles
+#   2 - Comentario em Portugues
+#   3 - Imports sem usar o from, a não ser que prejudique a performance
+#   4 - Atividades a serem feitas devem estar como to_do no codigo
+#   5 - Commits curtos e explicativos
+#   6 -
 
 def main():
     # Carregando metadados
     tracks = utils.load(METADATA_DIR + '/tracks.csv')
     genres = utils.load(METADATA_DIR + '/genres.csv')
-
-    # Tratando a Base de dados FMA
-    # tracks_without_genres = tracks[('track', 'genre_top')].isna()
-    tracks_with_genres = tracks[('track', 'genre_top')].notna()
-    tracks = tracks[tracks_with_genres]
 
     # Limitando a base
     # tracks_subset = tracks['set', 'subset'] <= 'full'
@@ -244,7 +246,7 @@ def main():
     tracks_ids = tracks_ids[tracks_ids.index(current_id):]
 
     music_ids = dict(tracks[('track', 'genre_top')])
-    music_ids = {v: k for k, v in music_ids.items()}
+    music_ids = {v: k for k, v in music_ids.items()}.values()
 
     feature.extract_features(fe_functions=fe_functions,
                              music_ids=music_ids,
