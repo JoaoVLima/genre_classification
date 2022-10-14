@@ -32,7 +32,7 @@ from variables import *
 #   5 - Commits curtos e explicativos
 #   6 -
 
-def main():
+def main(task):
     # Carregando metadados
     tracks = utils.load(METADATA_DIR + '/tracks.csv')
     genres = utils.load(METADATA_DIR + '/genres.csv')
@@ -248,24 +248,26 @@ def main():
     music_ids = dict(tracks[('track', 'genre_top')])
     music_ids = {v: k for k, v in music_ids.items()}.values()
 
-    feature.extract_features(fe_functions=fe_functions,
-                             music_ids=music_ids,
-                             genres=genres,
-                             tracks_ids=tracks_ids,
-                             sampling_rate=sampling_rate,
-                             current_id=current_id,
-                             errors_id=errors_id)
 
-    machine_learning.train_models(fe_functions=fe_functions,
-                                  funcoes_de_ml=fe_functions,
-                                  music_ids=music_ids,
-                                  genres=genres,
-                                  tracks_ids=tracks_ids,
-                                  tracks=tracks)
+    if task == 'extract_features':
+        feature.extract_features(fe_functions=fe_functions,
+                                 music_ids=music_ids,
+                                 genres=genres,
+                                 tracks_ids=tracks_ids,
+                                 sampling_rate=sampling_rate,
+                                 current_id=current_id,
+                                 errors_id=errors_id)
+    elif task == 'train_models':
+        machine_learning.train_models(fe_functions=fe_functions,
+                                      funcoes_de_ml=fe_functions,
+                                      music_ids=music_ids,
+                                      genres=genres,
+                                      tracks_ids=tracks_ids,
+                                      tracks=tracks)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
 
 
 def etl(filename):
