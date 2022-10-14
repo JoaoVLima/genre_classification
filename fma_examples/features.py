@@ -20,6 +20,7 @@ import pandas as pd
 import librosa
 from tqdm import tqdm
 import utils
+from variables import *
 
 
 def columns():
@@ -48,6 +49,7 @@ def compute_features(tid):
 
     # Catch warnings as exceptions (audioread leaks file descriptors).
     warnings.filterwarnings('error', module='librosa')
+    warnings.simplefilter('ignore', UserWarning)
 
     def feature_stats(name, values):
         features[name, 'mean'] = np.mean(values, axis=1)
@@ -59,7 +61,7 @@ def compute_features(tid):
         features[name, 'max'] = np.max(values, axis=1)
 
     try:
-        filepath = utils.get_audio_path(os.environ.get('AUDIO_DIR'), tid)
+        filepath = utils.get_audio_path(AUDIO_DIR, tid)
         x, sr = librosa.load(filepath, sr=None, mono=True)  # kaiser_fast
 
         f = librosa.feature.zero_crossing_rate(x, frame_length=2048, hop_length=512)
@@ -86,8 +88,8 @@ def compute_features(tid):
         f = librosa.feature.chroma_stft(S=stft**2, n_chroma=12)
         feature_stats('chroma_stft', f)
 
-        f = librosa.feature.rmse(S=stft)
-        feature_stats('rmse', f)
+        f = librosa.feature.rms(S=stft)
+        feature_stats('rms', f)
 
         f = librosa.feature.spectral_centroid(S=stft)
         feature_stats('spectral_centroid', f)
@@ -110,12 +112,13 @@ def compute_features(tid):
 
 
 def main():
-    tracks = utils.load('tracks.csv')
+    tracks = utils.load(METADATA_DIR + '/tracks.csv')
     features = pd.DataFrame(index=tracks.index,
                             columns=columns(), dtype=np.float32)
 
     # More than usable CPUs to be CPU bound, not I/O bound. Beware memory.
-    nb_workers = int(1.5 * len(os.sched_getaffinity(0)))
+    # nb_workers = int(1.5 * len(os.sched_getaffinity(0)))
+    nb_workers = 4
 
     # Longest is ~11,000 seconds. Limit processes to avoid memory errors.
     table = ((5000, 1), (3000, 3), (2000, 5), (1000, 10), (0, nb_workers))
