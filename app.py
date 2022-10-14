@@ -19,4 +19,15 @@ def train_models():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(
+                use_reloader=False,
+                use_debugger=True,
+                # use_evalex=True,
+                # reloader_interval=1,
+                # reloader_type='auto',
+                # threaded=False,
+                # processes=1,
+                # request_handler=None,
+                # static_files=None,
+                passthrough_errors=False,
+            )

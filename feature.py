@@ -67,22 +67,43 @@ def criar_csvs(funcoes_de_feature_extraction):
     for data_file in data_files:
         data_file.close()
 
-# TODO: Caso a musica tenha menos que 1min 30sec, dividir em 3 partes.
-def extrair30s(data, sampling_rate):
-    segundos = int(data.size / sampling_rate)
 
-    inicio_m = int(segundos / 2) - 15
-    fim_m = int(segundos / 2) + 15
+def time_decomposition(data, sr):
+    seconds = data.size//sr
 
-    inicio_f = segundos - 35
-    fim_f = segundos - 5
+    if not seconds:
+        return None, None, None
 
-    data_inicio = data[0 * sampling_rate:30 * sampling_rate]
-    data_meio = data[inicio_m * sampling_rate:fim_m * sampling_rate]
-    data_fim = data[inicio_f * sampling_rate:fim_f * sampling_rate]
+    if seconds < 90:
+        size = seconds//3
+        start_s = 0
+        end_s = size
 
-    return data_inicio, data_meio, data_fim
+        start_m = size+1
+        end_m = size*2
 
+        start_e = (size*2)+1
+        end_e = seconds
+    else:
+        start_s = 0
+        end_s = 30
+
+        start_m = seconds//2 - 15
+        end_m = seconds//2 + 15
+
+        start_e = seconds - 35
+        end_e = seconds - 5
+
+    data_start = data[start_s * sr:end_s * sr]
+    data_middle = data[start_m * sr:end_m * sr]
+    data_end = data[start_e * sr:end_e * sr]
+
+    return data_start, data_middle, data_end
+
+
+# TODO: Fazer os arquivos de features serem MultiIndex, tirando as listas das celulas
+
+# TODO: (Esperar para fazer esse.) Fazer uma funcao para arredondar os numeros retornados das funcoes de features em 2 casas decimais
 
 def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, errors_id, fe_functions):
     data_file = pd.read_csv(FEATURE_DIR + '/data.csv', index_col='id')
@@ -101,7 +122,7 @@ def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, e
     for id in tqdm(tracks_ids):
         try:
             ## Open files
-            progress_file = open(LOG_DIR + '/progress.py', 'w')
+            progress_file = open('progress.py', 'w')
 
             ## Salva as variaveis de progresso
             progress_file.write(f'CURRENT_ID = {id}\n')
@@ -111,11 +132,12 @@ def extract_features(tracks_ids, sampling_rate, music_ids, genres, current_id, e
             # Pega o caminho do arquivo de audio
             filename = utils.get_audio_path(AUDIO_DIR, id)
 
+            # TODO: Usar o load do ffmpeg ou outro que seja mais rapido do que o librosa
             # Carrega os dados do arquivo
             data, sampling_rate = lr.load(filename, sr=sampling_rate, mono=True)
 
             # Time decomposition
-            data_inicio, data_meio, data_fim = extrair30s(data, sampling_rate)
+            data_inicio, data_meio, data_fim = time_decomposition(data, sampling_rate)
 
             # Feature Extraction
             for funcao in fe_functions:
