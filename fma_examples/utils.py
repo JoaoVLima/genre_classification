@@ -358,3 +358,35 @@ def build_sample_loader(audio_dir, Y, loader):
                 return self.X[:batch_size], self.Y[:batch_size]
 
     return SampleLoader
+
+def time_decomposition(data, sr):
+    seconds = data.size//sr
+
+    if not seconds:
+        return None, None, None
+
+    if seconds < 90:
+        size = seconds//3
+        start_s = 0
+        end_s = size
+
+        start_m = size+1
+        end_m = size*2
+
+        start_e = (size*2)+1
+        end_e = seconds
+    else:
+        start_s = 0
+        end_s = 30
+
+        start_m = seconds//2 - 15
+        end_m = seconds//2 + 15
+
+        start_e = seconds - 35
+        end_e = seconds - 5
+
+    data_start = data[start_s * sr:end_s * sr]
+    data_middle = data[start_m * sr:end_m * sr]
+    data_end = data[start_e * sr:end_e * sr]
+
+    return data_start, data_middle, data_end
