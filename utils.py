@@ -189,7 +189,7 @@ def create_folders_genres(dir, genres):
 def create_folders_ml(dir, genres, mls):
     for genre in genres:
         for ml in mls:
-            os.mkdir(f'{dir}/{genre}')
+            os.mkdir(f'{dir}/{genre}/{ml}')
 
 
 def tratar_nome_genero(string):

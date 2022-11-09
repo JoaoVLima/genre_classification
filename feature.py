@@ -180,22 +180,22 @@ class Feature:
     @staticmethod
     def extraction_method(feature=None):
         features = {
-            'chroma_stft': ChromaStft(),
-            'chroma_cqt': ChromaCqt(),
-            'chroma_cens': ChromaCens(),
-            'melspectrogram': Melspectrogram(),
-            'mfcc': MFCC(),
-            'spectral_centroid': SpectralCentroid(),
-            'spectral_bandwidth': SpectralBandwidth(),
-            'spectral_contrast': SpectralContrast(),
-            'spectral_rolloff': SpectralRolloff(),
-            'poly_features': PolyFeatures(),
-            'tonnetz': Tonnetz(),
-            'tempogram': Tempogram(),
-            'fourier_tempogram': FourierTempogram(),
+            'chroma_stft': ChromaStft,
+            'chroma_cqt': ChromaCqt,
+            'chroma_cens': ChromaCens,
+            'melspectrogram': Melspectrogram,
+            'mfcc': MFCC,
+            'spectral_centroid': SpectralCentroid,
+            'spectral_bandwidth': SpectralBandwidth,
+            'spectral_contrast': SpectralContrast,
+            'spectral_rolloff': SpectralRolloff,
+            'poly_features': PolyFeatures,
+            'tonnetz': Tonnetz,
+            'tempogram': Tempogram,
+            'fourier_tempogram': FourierTempogram,
         }
         try:
-            return features[feature]
+            return features[feature]()
         except:
             return Feature()
 

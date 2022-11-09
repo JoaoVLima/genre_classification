@@ -64,7 +64,7 @@ def compute_features(tid):
         filepath = utils.get_audio_path(AUDIO_DIR, tid)
         x, sr = librosa.load(filepath, sr=None, mono=True)  # kaiser_fast
 
-        x, _, _ = utils.time_decomposition(x, sr)
+        _, _, x = utils.time_decomposition(x, sr)
 
         f = librosa.feature.zero_crossing_rate(x, frame_length=2048, hop_length=512)
         feature_stats('zcr', f)
@@ -154,7 +154,7 @@ def save(features, ndigits):
     features.sort_index(axis=0, inplace=True)
     features.sort_index(axis=1, inplace=True)
 
-    features.to_csv('features_start.csv', float_format='%.{}e'.format(ndigits))
+    features.to_csv('features_end.csv', float_format='%.{}e'.format(ndigits))
 
 
 def test(features, ndigits):

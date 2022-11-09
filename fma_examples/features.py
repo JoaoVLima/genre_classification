@@ -137,6 +137,8 @@ def main():
             if i % 1000 == 0:
                 save(features, 10)
 
+        pool.close()
+
     save(features, 10)
     test(features, 10)
 
